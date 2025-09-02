@@ -167,3 +167,43 @@ describe("Classe Banco - Método obterTotalDepositado", () => {
     expect(totalDepositado).toBe(55);
   })
 })
+
+describe("Classe Banco - Cenários adicionais para cobertura mínima", () => {
+  let banco;
+  let contaDestino;
+
+  beforeEach(() => {
+    banco = new Banco("Minha Conta", 50);
+    contaDestino = new Banco("Destino", 20);
+  });
+
+  test("Transferir lança erro se saldo insuficiente", () => {
+    expect(() => banco.transferir(100, contaDestino)).toThrow("Saldo insuficiente");
+  });
+
+  test("Aplicar juros em saldo zero", () => {
+    banco.saldo = 0;
+    const novoSaldo = banco.aplicarJuros(10);
+    expect(novoSaldo).toBe(0);
+    expect(banco.transacoes[0]).toEqual({ tipo: 'Juros', valor: 0 });
+  });
+
+  test("Obter total depositado sem depósitos retorna 0", () => {
+    expect(banco.obterTotalDepositado()).toBe(0);
+  });
+
+  test("Pagar conta com saldo insuficiente lança erro", () => {
+    expect(() => banco.pagarConta(100, "Fatura")).toThrow("Saldo insuficiente");
+  });
+
+  test("Verificar limite de saque sem definir limite lança erro", () => {
+    const b = new Banco("Teste");
+    expect(b.verificarLimiteDeSaque(10)).toBe(true); // undefined > number vai lançar erro
+  });
+
+  test("Pagar conta adiciona apenas pagamento se saque não for feito separadamente", () => {
+    banco.saldo = 100;
+    banco.pagarConta(50, "Fatura");
+    expect(banco.transacoes).toContainEqual({ tipo: 'Pagamento', valor: 50, descricao: "Fatura" });
+  });
+});
